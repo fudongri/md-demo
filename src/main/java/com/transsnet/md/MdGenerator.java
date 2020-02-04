@@ -64,7 +64,8 @@ public class MdGenerator {
     private static List<Table> getTableList() throws Exception {
         Connection connection = getConnection();
         QueryRunner queryRunner = new QueryRunner();
-        List<String> tableNameList = queryRunner.query(connection, "SHOW TABLES", new ColumnListHandler<>());
+        String sql = "SHOW TABLES";
+        List<String> tableNameList = queryRunner.query(connection, sql, new ColumnListHandler<>());
         DbUtils.closeQuietly(connection);
         return tableNameList.stream().map(Table::new).collect(Collectors.toList());
     }
