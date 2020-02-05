@@ -52,6 +52,7 @@ public class MdGenerator {
 
         setTableColumns(tables);
         System.out.println(tables);
+        System.out.println(tables.size());
         //输出
         write2File(tables, exportPath);
         System.out.println("执行完毕...");
@@ -88,22 +89,19 @@ public class MdGenerator {
 
     private static void write2File(List<Table> tables, String exportPath) throws Exception {
         StringBuilder outSb = new StringBuilder();
-        String outStr = tables.stream().map(table -> {
+        tables.forEach(table -> {
             StringBuilder sb = new StringBuilder();
             sb.append("\n***表名：*** ").append(table.getName()).append("\n\n");
             sb.append("|字段|类型|说明|\n");
             sb.append("|:------|:------|:------|\n");
-            List<Column> columns = table.getColumns();
-            String columnStr = columns.stream().map(column ->
+            table.getColumns().forEach(column ->
                     sb.append("|").append(column.getField()).append("|").append(column.getType())
                             .append("|").append(column.getComment()).append("|\n").toString()
-            ).collect(Collectors.joining());
+            );
+            outSb.append(sb);
+        });
 
-            outSb.append(columnStr);
-            return outSb.toString();
-        }).collect(Collectors.joining());
-
-        FileUtils.writeStringToFile(new File(exportPath), outStr, "UTF-8");
+        FileUtils.writeStringToFile(new File(exportPath), outSb.toString(), "UTF-8");
     }
 
 }
