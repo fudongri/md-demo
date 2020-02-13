@@ -1,6 +1,7 @@
-package com.transsnet.md.entity;
+package com.transsnet.entity;
 
-import lombok.*;
+import lombok.Data;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -9,6 +10,8 @@ import java.util.List;
 public class Table {
     private String name;
     private List<Column> columns;
+
+    private String ddl;
 
     public Table(String name) {
         this.name = name;

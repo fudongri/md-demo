@@ -1,11 +1,11 @@
-package com.transsnet.md;
+package com.transsnet.db;
 
-import com.transsnet.entity.Column;
 import com.transsnet.entity.Table;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
+import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -15,19 +15,20 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * mysql表转换成markdown文档
- *
- * @author fdr
+ * @Author: fdr
  */
-public class MdGenerator {
+public class JooqDbFileGenerator {
 
     //datasource
     private static final String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&&useSSL=false";
     private static final String username = "root";
     private static final String pwd = "123456";
+    //根据需要修改，数据库schema
+    private static final String DB_SCHEMA = "`laf`";
 
     static {
         try {
@@ -38,9 +39,10 @@ public class MdGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        String path = System.getProperty("user.dir") + "/genFiles/";
+        String path = System.getProperty("user.dir") + "/db/";
         System.out.println("文件输出路径:" + path);
-        String fileName = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now()) + ".md";
+        String fileName = "db.sql";
+        //表必须有主键
         start(path + fileName);
     }
 
@@ -50,7 +52,7 @@ public class MdGenerator {
         List<Table> tables = getTableList();
 //        System.out.println(tables);
 
-        setTableColumns(tables);
+        setDdl(tables);
         System.out.println(tables);
         System.out.println(tables.size());
         //输出
@@ -71,15 +73,14 @@ public class MdGenerator {
         return tableNameList.stream().map(Table::new).collect(Collectors.toList());
     }
 
-
-    private static void setTableColumns(List<Table> tables) throws Exception {
+    private static void setDdl(List<Table> tables) throws Exception {
         Connection connection = getConnection();
         QueryRunner queryRunner = new QueryRunner();
         tables.forEach(table -> {
-            String sql = "SHOW FULL COLUMNS FROM " + table.getName();
+            String sql = "SHOW CREATE TABLE " + table.getName();
             try {
-                List<Column> columns = queryRunner.query(connection, sql, new BeanListHandler<>(Column.class));
-                table.setColumns(columns);
+                Map<String, Object> map = queryRunner.query(connection, sql, new MapHandler());
+                table.setDdl(map.get("CREATE TABLE") + "");
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -91,17 +92,18 @@ public class MdGenerator {
         StringBuilder outSb = new StringBuilder();
         tables.forEach(table -> {
             StringBuilder sb = new StringBuilder();
-            sb.append("\n***表名：*** ").append(table.getName()).append("\n\n");
-            sb.append("|字段|类型|说明|\n");
-            sb.append("|:------|:------|:------|\n");
-            table.getColumns().forEach(column ->
-                    sb.append("|").append(column.getField()).append("|").append(column.getType())
-                            .append("|").append(column.getComment()).append("|\n")
-            );
+            sb.append("\n-- ----------------------------");
+            sb.append("\n-- Table structure for " + table.getName());
+            sb.append("\n-- ----------------------------\n");
+            sb.append("\nDROP TABLE IF EXISTS " + DB_SCHEMA + ".`" + table.getName() + "`;\n");
+            String ddl = table.getDdl();
+            ddl = ddl.replace("CREATE TABLE ", "CREATE TABLE " + DB_SCHEMA + ".");
+            System.out.println(ddl.matches("([\\s\\S]*)PRIMARY KEY[\\s\\S]*"));
+            ddl = ddl.replaceAll("(PRIMARY KEY.*?\\))[\\s\\S]*", "$1\n) ;");
+            sb.append(ddl + "\n");
             outSb.append(sb);
         });
 
         FileUtils.writeStringToFile(new File(exportPath), outSb.toString(), "UTF-8");
     }
-
 }

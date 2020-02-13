@@ -1,4 +1,4 @@
-package com.transsnet.md.entity;
+package com.transsnet.entity;
 
 import lombok.Data;
 import lombok.ToString;
