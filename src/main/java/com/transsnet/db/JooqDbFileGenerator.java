@@ -3,7 +3,6 @@ package com.transsnet.db;
 import com.transsnet.entity.Table;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.io.FileUtils;
@@ -41,7 +40,7 @@ public class JooqDbFileGenerator {
     public static void main(String[] args) throws Exception {
         String path = System.getProperty("user.dir") + "/db/";
         System.out.println("文件输出路径:" + path);
-        String fileName = "db.sql";
+        String fileName = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now()) + ".sql";
         //表必须有主键
         start(path + fileName);
     }
@@ -93,14 +92,13 @@ public class JooqDbFileGenerator {
         tables.forEach(table -> {
             StringBuilder sb = new StringBuilder();
             sb.append("\n-- ----------------------------");
-            sb.append("\n-- Table structure for " + table.getName());
-            sb.append("\n-- ----------------------------\n");
-            sb.append("\nDROP TABLE IF EXISTS " + DB_SCHEMA + ".`" + table.getName() + "`;\n");
+            sb.append("\n-- Table structure for ").append(table.getName());
+            sb.append("\n-- ----------------------------");
+            sb.append("\nDROP TABLE IF EXISTS " + DB_SCHEMA + ".`").append(table.getName()).append("`;\n");
             String ddl = table.getDdl();
             ddl = ddl.replace("CREATE TABLE ", "CREATE TABLE " + DB_SCHEMA + ".");
-            System.out.println(ddl.matches("([\\s\\S]*)PRIMARY KEY[\\s\\S]*"));
-            ddl = ddl.replaceAll("(PRIMARY KEY.*?\\))[\\s\\S]*", "$1\n) ;");
-            sb.append(ddl + "\n");
+            ddl = ddl.replaceAll("(PRIMARY KEY.*?\\))[\\s\\S]*", "$1\n);");
+            sb.append(ddl).append("\n");
             outSb.append(sb);
         });
 
