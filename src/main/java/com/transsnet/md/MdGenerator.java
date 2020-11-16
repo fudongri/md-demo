@@ -25,7 +25,10 @@ import java.util.stream.Collectors;
 public class MdGenerator {
 
     //datasource
-    private static final String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&&useSSL=false";
+//    private static final String url = "jdbc:mysql://10.240.36.211:3306/test?useUnicode=true&characterEncoding=utf8&&useSSL=false";
+//    private static final String username = "root";
+//    private static final String pwd = "Transsnet_123";
+    private static final String url = "jdbc:mysql://10.200.120.100:3306/cncs?useUnicode=true&characterEncoding=utf8&&useSSL=false";
     private static final String username = "root";
     private static final String pwd = "123456";
 
